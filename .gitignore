@@ -1,0 +1,6 @@
+node_modules/
+uploads/
+usage_logs.csv
+.DS_Store
+*.log
+.env

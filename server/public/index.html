@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Diary PDF Generator</title>
+    <style>
+        :root {
+            --primary: #1f4e79;
+            --primary-light: #3a7bd5;
+            --secondary: #ff8c00;
+            --bg-gradient: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            --white: #ffffff;
+            --text-main: #2d3436;
+            --text-muted: #636e72;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Start from top on mobile */
+            padding: 10px;
+            color: var(--text-main);
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 1100px; /* Wider layout */
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin: 10px auto;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                align-items: center;
+                padding: 40px 20px;
+            }
+            .container {
+                padding: 40px;
+                border-radius: 20px;
+                margin: 0;
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            color: var(--primary);
+            margin-bottom: 5px;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        @media (min-width: 768px) {
+            .header h1 {
+                font-size: 36px;
+                margin-bottom: 8px;
+            }
+            .header {
+                margin-bottom: 40px;
+            }
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        @media (min-width: 768px) {
+            .header p {
+                font-size: 18px;
+            }
+        }
+
+        .upload-section {
+            margin-bottom: 20px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            display: none;
+        }
+
+        .file-input-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 15px;
+            border: 2px dashed #cbd5e0;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #f8fafc;
+        }
+
+        @media (min-width: 768px) {
+            .file-input-label {
+                padding: 60px 20px;
+                border-radius: 20px;
+            }
+        }
+
+        .file-input-label:hover {
+            border-color: var(--primary-light);
+            background: #f1f5f9;
+            transform: translateY(-2px);
+        }
+
+        .file-input-label.dragover {
+            border-color: var(--primary);
+            background: #e2e8f0;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+
+        @media (min-width: 768px) {
+            .upload-icon {
+                font-size: 64px;
+                margin-bottom: 20px;
+            }
+        }
+
+        .file-input-label p {
+            font-size: 16px;
+            color: #4a5568;
+            margin: 5px 0;
+        }
+
+        @media (min-width: 768px) {
+            .file-input-label p {
+                font-size: 20px;
+            }
+        }
+
+        .file-input-label .small {
+            color: #718096;
+            font-size: 12px;
+        }
+
+        .file-name {
+            margin-top: 15px;
+            padding: 12px 15px;
+            background: #edf2f7;
+            border-left: 4px solid var(--primary);
+            border-radius: 6px;
+            display: none;
+            font-weight: 500;
+            color: var(--primary);
+            font-size: 13px;
+        }
+
+        @media (min-width: 768px) {
+            .file-name {
+                font-size: 15px;
+            }
+        }
+
+        .file-name.show {
+            display: flex;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(31, 78, 121, 0.3);
+        }
+
+        @media (min-width: 768px) {
+            .submit-btn {
+                padding: 18px;
+                font-size: 20px;
+                border-radius: 15px;
+            }
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            background: #2c3e50;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(31, 78, 121, 0.4);
+        }
+
+        .submit-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .instructions {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        @media (min-width: 768px) {
+            .instructions {
+                margin-top: 50px;
+                padding-top: 40px;
+            }
+        }
+
+        .instructions h3 {
+            color: var(--primary);
+            margin-bottom: 12px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @media (min-width: 768px) {
+            .instructions h3 {
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+        }
+
+        .download-sample-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--secondary);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            transition: all 0.2s ease;
+        }
+
+        @media (min-width: 768px) {
+            .download-sample-btn {
+                padding: 12px 24px;
+                font-size: 15px;
+                border-radius: 8px;
+                margin-bottom: 25px;
+            }
+        }
+
+        .download-sample-btn:hover {
+            background: #e67e00;
+            transform: translateY(-1px);
+        }
+
+        .format-table-wrapper {
+            overflow-x: auto;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .format-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            background: white;
+            min-width: 600px; /* Force scroll on mobile to keep structure */
+        }
+
+        @media (min-width: 768px) {
+            .format-table {
+                font-size: 14px;
+            }
+        }
+
+        .format-table th {
+            background: #f8fafc;
+            color: var(--primary);
+            text-align: left;
+            padding: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .format-table td {
+            padding: 10px;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--text-muted);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @media (min-width: 768px) {
+            .spinner {
+                width: 45px;
+                height: 45px;
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            display: none;
+            font-weight: 500;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        @media (min-width: 768px) {
+            .message {
+                padding: 18px;
+                font-size: 16px;
+                border-radius: 12px;
+            }
+        }
+
+        .message.success {
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+            display: block;
+        }
+
+        .message.error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            display: block;
+        }
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 14px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(58, 123, 213, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📓 Daily Diary Generator</h1>
+            <p>Generate professional internship dairies from CSV</p>
+        </div>
+
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="input-group">
+                <label for="userName">Full Name</label>
+                <input type="text" id="userName" name="userName" placeholder="Enter your name" required>
+            </div>
+
+            <div class="upload-section">
+                <div class="file-input-wrapper">
+                    <label for="csvFile" class="file-input-label" id="dropZone">
+                        <div class="upload-icon">📄</div>
+                        <p><strong>Click to upload</strong> or drag & drop</p>
+                        <p class="small">Accepts .csv files (max 10MB)</p>
+                    </label>
+                    <input type="file" id="csvFile" name="csvFile" accept=".csv" />
+                </div>
+                <div class="file-name" id="fileName"></div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn" disabled>
+                Generate Professional PDF
+            </button>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Formatting Academic PDF...</p>
+            </div>
+
+            <div class="message" id="message"></div>
+        </form>
+
+        <div class="instructions">
+            <h3>📋 How to use:</h3>
+            
+            <a href="/download-sample" class="download-sample-btn">
+                📥 Download Sample CSV Template
+            </a>
+
+            <p style="font-size: 14px; margin-bottom: 10px; color: var(--text-muted);">
+                Fill the CSV with your entries. Ensure these exact columns are present:
+            </p>
+
+            <div class="format-table-wrapper">
+                <table class="format-table">
+                    <thead>
+                        <tr>
+                            <th>Column Name</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Date</strong></td>
+                            <td>The date of the entry (e.g., 2025-01-01)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tasks Assigned</strong></td>
+                            <td>What tasks were given to you today?</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Activities Carried Out</strong></td>
+                            <td>What did you actually do?</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Technical Learning</strong></td>
+                            <td>What tools/tech did you learn?</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Communication made...</strong></td>
+                            <td>Meetings or discussions in the org.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Outcome and Reflection</strong></td>
+                            <td>Your summary of the day's impact.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('csvFile');
+        const dropZone = document.getElementById('dropZone');
+        const fileName = document.getElementById('fileName');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const message = document.getElementById('message');
+        const userNameInput = document.getElementById('userName');
+
+        function validateForm() {
+            const isNameFilled = userNameInput.value.trim().length > 0;
+            const isFileSelected = fileInput.files.length > 0;
+            submitBtn.disabled = !(isNameFilled && isFileSelected);
+        }
+
+        // Event listeners
+        userNameInput.addEventListener('input', validateForm);
+
+        // File selection handler
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                fileName.textContent = `✓ Selected: ${file.name}`;
+                fileName.classList.add('show');
+            } else {
+                fileName.classList.remove('show');
+            }
+            validateForm();
+        });
+
+        // Drag and drop handlers
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                const event = new Event('change', { bubbles: true });
+                fileInput.dispatchEvent(event);
+            }
+        });
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!fileInput.files[0]) {
+                showMessage('Please select a CSV file', 'error');
+                return;
+            }
+
+            const formData = new FormData(form);
+
+            loading.style.display = 'block';
+            message.style.display = 'none';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'daily_diary.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+
+                    showMessage('✓ PDF generated successfully!', 'success');
+                    fileInput.value = '';
+                    fileName.classList.remove('show');
+                    submitBtn.disabled = true;
+                } else {
+                    const error = await response.json();
+                    showMessage(`Error: ${error.error}`, 'error');
+                    submitBtn.disabled = false;
+                }
+            } catch (error) {
+                showMessage(`Error: ${error.message}`, 'error');
+                submitBtn.disabled = false;
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+
+        function showMessage(text, type) {
+            message.textContent = text;
+            message.className = `message ${type}`;
+            setTimeout(() => {
+                if (type === 'success') {
+                    message.style.display = 'none';
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+
+</html>
