@@ -6,7 +6,6 @@ async function generatePDF(entries) {
     let browser;
     try {
         browser = await puppeteer.launch({
-            headless: 'new',
             args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
 
